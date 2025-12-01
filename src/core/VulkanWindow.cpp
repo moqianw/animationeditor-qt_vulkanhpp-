@@ -6,6 +6,8 @@ VulkanWindow::VulkanWindow(vk::Instance instance, QWidget* parent):instance(inst
 {
 
 	setSurfaceType(QSurface::VulkanSurface);
+	connect(&updatetimer, &QTimer::timeout, this, &VulkanWindow::renderFrame);
+	updatetimer.start(16);
 }
 
 VulkanWindow::~VulkanWindow()
@@ -27,11 +29,15 @@ bool VulkanWindow::event(QEvent* event)
 	switch (event->type()) {
 	case QEvent::Close:
 		break;
+	case QEvent::UpdateRequest:
+		qDebug() << "k";
+		break;
 	}
 	return QWindow::event(event);
 }
 void VulkanWindow::destroy() {
 	if (device) {
+		renderer.reset();
 		if (commandpool) commandpool.reset();
 		for (auto& view : this->swapchainImageViews) {
 			device.destroyImageView(view);
@@ -163,4 +169,14 @@ void VulkanWindow::createCommandPool() {
 	createinfo.setCommandPoolCreateInfo(info)
 		.setDevice(device);
 	commandpool = std::make_unique<UT::CommandPool_>(createinfo);
+}
+
+void VulkanWindow::createRenderer()
+{
+
+}
+
+void VulkanWindow::renderFrame()
+{
+	qDebug() << "k";
 }

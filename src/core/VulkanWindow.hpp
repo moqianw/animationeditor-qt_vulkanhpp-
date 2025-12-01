@@ -5,9 +5,10 @@
 
 #include <vulkan/vulkan.hpp>
 #include <vulkan/vulkan_win32.h>      // Win32 surface
-#include "utils/utrls.hpp"
+#include "utils/utils.hpp"
 #include "src/core/utils/CommandPool.hpp"
-
+#include "VulkanRenderer.hpp"
+#include <QTimer>
 class VulkanWindow :public QWindow {
 	Q_OBJECT
 signals:
@@ -40,10 +41,14 @@ private:
 	std::vector<vk::ImageView> swapchainImageViews;
 	UT::QueueFamilyIndices queuefamilyindices;
 	UT::CommandPool commandpool;
+	VulkanRenderer renderer;
 protected:
 	friend class MainWindow;
 	void createSurfaceKHR();
 	void createSwapChain(const UT::QueueFamilyIndices& queuefamilyindices);
 	void createImageView();
 	void createCommandPool();
+	void createRenderer();
+	void renderFrame();
+	QTimer updatetimer;
 };
