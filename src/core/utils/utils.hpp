@@ -15,6 +15,7 @@ namespace UT {
 		QueueFamilyIndices& operator=(const QueueFamilyIndices& other) = default;
 		QueueFamilyIndices(const QueueFamilyIndices& other) = default;
 		bool isComplete() { return graphicsFamily.has_value() && presentFamily.has_value(); }
+		operator bool() { return isComplete(); }
 	};
 	/// <summary>
 	/// 

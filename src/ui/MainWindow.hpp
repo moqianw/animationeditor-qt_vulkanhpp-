@@ -2,7 +2,7 @@
 
 #include <QMainWindow>
 #include <QMdiArea>
-#include "../core/VulkanContaxt.hpp"
+#include "../core/VulkanWindow.hpp"
 
 class MainWindow :public QMainWindow {
 	Q_OBJECT

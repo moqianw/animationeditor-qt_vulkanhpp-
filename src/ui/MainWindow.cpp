@@ -23,21 +23,14 @@ MainWindow::MainWindow(QWidget* parent)
 MainWindow::~MainWindow()
 {
 	vulkanwindows.clear();
-	
 	vulkancontaxt.reset();
 }
 
 void MainWindow::addVulkanWindow()
 {
-	std::unique_ptr<VulkanWindow> window = std::make_unique<VulkanWindow>(vulkancontaxt->getVulkanInstance(), this);
+    std::unique_ptr<VulkanWindow> window = std::make_unique<VulkanWindow>(*vulkancontaxt);
 	
-	connect(window.get(), &VulkanWindow::surfaceReady, this, [this, win = window.get()](vk::SurfaceKHR surface) {
-		vulkancontaxt->initDevice(win->getSurfaceKHR());
-		win->setDevice(vulkancontaxt->device).setPhysicalDevice(vulkancontaxt->physicaldevice);
-		win->createSwapChain(vulkancontaxt->queuefamilyindices);
-		win->createImageView();
-		win->createCommandPool();
-		});
+
 	QMdiSubWindow* subwindow = new QMdiSubWindow;
 	subwindow->setWidget(QWidget::createWindowContainer(window.get()));
 	subwindow->setWindowTitle("new1");

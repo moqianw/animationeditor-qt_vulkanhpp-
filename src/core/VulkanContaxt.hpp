@@ -2,18 +2,28 @@
 
 
 #include <vector>
-
-#include "VulkanWindow.hpp"
+#include <mutex>
 #include "utils/utils.hpp"
+#include "qobject.h"
 
-class VulkanContaxt {
+class VulkanContaxt: public QObject {
+	Q_OBJECT
+signals:
+	void deviceready();
+public slots:
+	void emitDeviceReady(vk::SurfaceKHR surface);
 public:
 	VulkanContaxt();
 	~VulkanContaxt();
 	vk::Instance getVulkanInstance() { return instance; }
+	vk::Device getDevice() { return device; }
+	vk::PhysicalDevice getPhysicalDevice() { return physicaldevice; }
+	UT::QueueFamilyIndices getQueueFamilyIndices() { return queuefamilyindices; }
+
 	void destroy();
 protected:
 private:
+	std::mutex devicemutex;
 	friend class MainWindow;
 	vk::Instance instance = nullptr;
 	vk::PhysicalDevice physicaldevice = nullptr;

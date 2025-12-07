@@ -2,12 +2,20 @@
 #include "VulkanWindow.hpp"
 
 #include <QDebug>
-VulkanWindow::VulkanWindow(vk::Instance instance, QWidget* parent):instance(instance)
+VulkanWindow::VulkanWindow(VulkanContaxt& contaxt, QWindow* parent)
+    : QWindow(parent)
+    , contaxt(contaxt)
 {
 
 	setSurfaceType(QSurface::VulkanSurface);
 	connect(&updatetimer, &QTimer::timeout, this, &VulkanWindow::renderFrame);
 	updatetimer.start(16);
+	connect(this, &VulkanWindow::surfaceReady, &contaxt, &VulkanContaxt::emitDeviceReady);
+	connect(&contaxt, &VulkanContaxt::deviceready, this, [this]() {
+		createSwapChain();
+		createImageView();
+		createCommandPool();
+		});
 }
 
 VulkanWindow::~VulkanWindow()
@@ -36,7 +44,7 @@ bool VulkanWindow::event(QEvent* event)
 	return QWindow::event(event);
 }
 void VulkanWindow::destroy() {
-	if (device) {
+	if (vk::Device device = contaxt.getDevice()) {
 		renderer.reset();
 		if (commandpool) commandpool.reset();
 		for (auto& view : this->swapchainImageViews) {
@@ -45,10 +53,8 @@ void VulkanWindow::destroy() {
 		swapchainImageViews.clear();
 		if (swapchain)
 			device.destroySwapchainKHR(swapchain);
-		device = nullptr;
+
 	}
-	physicaldevice = nullptr;
-	instance = nullptr;
 	
 }
 
@@ -61,15 +67,18 @@ void VulkanWindow::createSurfaceKHR()
 	surfInfo.hwnd = (HWND)winId();
 	surfInfo.hinstance = GetModuleHandle(nullptr);
 	VkSurfaceKHR cSurface;
-	vkCreateWin32SurfaceKHR(static_cast<VkInstance>(instance), &surfInfo, nullptr, &cSurface);
-	surface = vk::SurfaceKHR(cSurface);
+	if (vk::Instance instance = contaxt.getVulkanInstance()){
+		vkCreateWin32SurfaceKHR(static_cast<VkInstance>(instance), &surfInfo, nullptr, &cSurface);
+		surface = vk::SurfaceKHR(cSurface);
+	}
+	if (!surface) throw std::runtime_error("Create SurfaceKHR ERROR");
 #endif
 }
 
 
-void VulkanWindow::createSwapChain(const UT::QueueFamilyIndices& queuefamilyindices)
+void VulkanWindow::createSwapChain()
 {
-	this->queuefamilyindices = queuefamilyindices;
+	auto physicaldevice = contaxt.getPhysicalDevice();
 	if (!physicaldevice) throw std::runtime_error("Create SwapChain ERROR: NOT SET physicaldevice");
 	auto surfacecaps = physicaldevice.getSurfaceCapabilitiesKHR(surface);
 	auto surfaceformats = physicaldevice.getSurfaceFormatsKHR(surface);
@@ -113,6 +122,7 @@ void VulkanWindow::createSwapChain(const UT::QueueFamilyIndices& queuefamilyindi
 		.setImageUsage(vk::ImageUsageFlagBits::eColorAttachment)
 		.setPresentMode(choicepresentmode.value())
 		.setImageExtent(swapchainextent.value());
+	auto queuefamilyindices = contaxt.getQueueFamilyIndices();
 	if (queuefamilyindices.graphicsFamily.value() == queuefamilyindices.presentFamily.value()) {
 		createinfo
 			.setQueueFamilyIndexCount(1)
@@ -126,13 +136,15 @@ void VulkanWindow::createSwapChain(const UT::QueueFamilyIndices& queuefamilyindi
 			.setQueueFamilyIndices(indexs)
 			.setImageSharingMode(vk::SharingMode::eConcurrent);
 	}
-	if (!device) throw std::runtime_error("Create swapchain ERROR: Not set device");
 
+	if (vk::Device device = contaxt.getDevice())
+		swapchain = device.createSwapchainKHR(createinfo);
 
-	swapchain = device.createSwapchainKHR(createinfo);
+	if (!swapchain) throw std::runtime_error("Create SwapChain ERROR");
 }
 void VulkanWindow::createImageView()
 {
+	auto device = contaxt.getDevice();
 	swapchainImages = device.getSwapchainImagesKHR(swapchain);
 	if (swapchainImages.empty()) throw std::runtime_error("Cannot get swapchain images");
 
@@ -164,10 +176,10 @@ void VulkanWindow::createImageView()
 void VulkanWindow::createCommandPool() {
 	UT::CommandPoolCreateInfo createinfo;
 	vk::CommandPoolCreateInfo info;
-	info.setQueueFamilyIndex(queuefamilyindices.graphicsFamily.value())
+	info.setQueueFamilyIndex(contaxt.getQueueFamilyIndices().graphicsFamily.value())
 		.setFlags(vk::CommandPoolCreateFlagBits::eResetCommandBuffer);
 	createinfo.setCommandPoolCreateInfo(info)
-		.setDevice(device);
+		.setDevice(contaxt.getDevice());
 	commandpool = std::make_unique<UT::CommandPool_>(createinfo);
 }
 

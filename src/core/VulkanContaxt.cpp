@@ -12,7 +12,11 @@ VulkanContaxt::VulkanContaxt()
 		qDebug() << e.what();
 	}
 }
-
+void VulkanContaxt::emitDeviceReady(vk::SurfaceKHR surface) {
+	std::lock_guard<std::mutex> lock(devicemutex);
+	initDevice(surface);
+	emit deviceready();
+}
 VulkanContaxt::~VulkanContaxt()
 {
 	destroy();

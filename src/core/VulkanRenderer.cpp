@@ -1,11 +1,10 @@
 ﻿#include "VulkanRenderer.hpp"
-#include "VulkanRenderer.hpp"
+#include "VulkanWindow.hpp"
 
-VulkanRenderer_::VulkanRenderer_() {
 
-}
-VulkanRenderer_::VulkanRenderer_(const VulkanRendererCreateInfo& createinfo) {
 
+VulkanRenderer_::VulkanRenderer_(VulkanWindow& window):window(window)
+{
 }
 
 VulkanRenderer_::~VulkanRenderer_()
