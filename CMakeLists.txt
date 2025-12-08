@@ -21,6 +21,8 @@ qt_add_executable(appqvulkan
     src/core/resource/PipelineManager.cpp
     src/core/resource/ShaderManager.cpp
     src/core/resource/DescriptorSetManager.cpp
+    src/core/resource/MaterialManager.cpp
+    
 )
 target_include_directories(appqvulkan PRIVATE
     "${CMAKE_SOURCE_DIR}/Thirdparty/Include"
