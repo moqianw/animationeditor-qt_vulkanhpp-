@@ -58,9 +58,6 @@ namespace GM {
 		std::optional<uint32_t> queuefamilyindex;
 		vk::RenderPass renderpass = nullptr;
 
-
-
-
 		std::shared_ptr<UT::CommandPool> commandpool;
 		std::vector<std::shared_ptr<GM::GameObject>> gameobjects;
 

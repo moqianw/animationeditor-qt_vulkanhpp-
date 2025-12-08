@@ -1,14 +1,15 @@
 #pragma once
 
 #include <vulkan/vulkan.hpp>
-
-namespace GM {
-	class PipelineManager {
+#include "qobject.h"
+namespace RS {
+	class Scene;
+	class PipelineManager :public QObject{
+		Q_OBJECT
 	public:
-		PipelineManager() = default;
+		PipelineManager(Scene& scene);
 		~PipelineManager();
 
-		PipelineManager& setDevice(const vk::Device& device);
 		vk::Pipeline createGraphPipeline(
 			const vk::RenderPass& renderpass,
 			const vk::PipelineLayout& pipelinelayout,
@@ -25,9 +26,8 @@ namespace GM {
 			return pipelinelayouts[index];
 		}
 		void destroy();
-		void init();
 	private:
-		vk::Device device = nullptr;
+		Scene& scene;
 		std::vector<vk::Pipeline> pipelines;
 		vk::PipelineCache pipelinecache = nullptr;
 		std::vector<vk::PipelineLayout> pipelinelayouts;

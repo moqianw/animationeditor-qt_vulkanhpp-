@@ -59,22 +59,32 @@ namespace UT {
 	/// </summary>
 	class ShaderStagesCreater {
 	public:
-		ShaderStagesCreater(){}
-		static std::optional<std::pair<vk::PipelineShaderStageCreateInfo, vk::ShaderModule>> createShaderStageCreateInfo(
-			const vk::Device& device, const std::vector<char>& data,
-			const vk::ShaderStageFlagBits& flag,
-			const char* entername) {
-			vk::PipelineShaderStageCreateInfo createinfo;
+		ShaderStagesCreater() = delete;
+		//static std::optional<std::pair<vk::PipelineShaderStageCreateInfo, vk::ShaderModule>> createShaderStageCreateInfo(
+		//	const vk::Device& device, const std::vector<char>& data,
+		//	const vk::ShaderStageFlagBits& flag,
+		//	const char* entername) {
+		//	vk::PipelineShaderStageCreateInfo createinfo;
+		//	vk::ShaderModuleCreateInfo modulecreateinfo;
+		//	modulecreateinfo.setCodeSize(static_cast<uint32_t>(data.size()))
+		//		.setPCode(reinterpret_cast<const uint32_t*>(data.data()));
+		//	auto module = device.createShaderModule(modulecreateinfo);
+		//	createinfo.setStage(flag)
+		//		.setModule(module)
+		//		.setPName(entername);
+		//	return std::pair<vk::PipelineShaderStageCreateInfo, vk::ShaderModule>(createinfo, module);
+		//}
+		static std::optional<vk::ShaderModule> createShaderModule(
+			const vk::Device& device, const std::vector<char>& data) {
+
 			vk::ShaderModuleCreateInfo modulecreateinfo;
 			modulecreateinfo.setCodeSize(static_cast<uint32_t>(data.size()))
 				.setPCode(reinterpret_cast<const uint32_t*>(data.data()));
 			auto module = device.createShaderModule(modulecreateinfo);
-			createinfo.setStage(flag)
-				.setModule(module)
-				.setPName(entername);
-			return std::pair<vk::PipelineShaderStageCreateInfo, vk::ShaderModule>(createinfo, module);
+			if (!module) throw std::runtime_error("failed to create shader module!");
+			return module;
 		}
-		~ShaderStagesCreater(){}
+		~ShaderStagesCreater() = delete;
 	private:
 	protected:
 	};

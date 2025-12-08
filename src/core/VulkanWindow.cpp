@@ -10,12 +10,13 @@ VulkanWindow::VulkanWindow(VulkanContaxt& contaxt, QWindow* parent)
 	setSurfaceType(QSurface::VulkanSurface);
 	connect(&updatetimer, &QTimer::timeout, this, &VulkanWindow::renderFrame);
 	updatetimer.start(16);
-	connect(this, &VulkanWindow::surfaceReady, &contaxt, &VulkanContaxt::emitDeviceReady);
+	connect(this, &VulkanWindow::surfaceReady, &contaxt, &VulkanContaxt::emitDeviceReady,Qt::SingleShotConnection);
 	connect(&contaxt, &VulkanContaxt::deviceready, this, [this]() {
 		createSwapChain();
 		createImageView();
 		createCommandPool();
-		});
+		createRenderer();
+		},Qt::SingleShotConnection);
 }
 
 VulkanWindow::~VulkanWindow()
@@ -185,10 +186,11 @@ void VulkanWindow::createCommandPool() {
 
 void VulkanWindow::createRenderer()
 {
-
+	renderer = std::make_unique<VulkanRenderer_>(*this);
 }
 
 void VulkanWindow::renderFrame()
 {
 	qDebug() << "k";
+	
 }

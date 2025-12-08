@@ -1,20 +1,7 @@
-﻿#include "DescriptorPool.hpp"
-#include <unordered_set>
+﻿#include "DescriptorSetManager.hpp"
+#include "Scene.hpp"
 #include <algorithm>
-namespace UT {
-
-	DescriptorPool_::DescriptorPool_(const DescriptorPoolCreateInfo& createinfo)
-		: device(createinfo.device)
-	{
-		if (!device) throw std::runtime_error("Create DescriptorPool ERROR: not set device");
-
-		try {
-			descriptorpool = device.createDescriptorPool(createinfo.createinfo);
-			if(!descriptorpool) throw std::runtime_error("Create DescriptorPool ERROR: create false");
-		} catch (const vk::SystemError& e) {
-			throw std::runtime_error(std::string("Create DescriptorPool ERROR: ") + e.what());
-		}
-	}
+namespace RS {
 	void DescriptorPool_::destroy() {
 		if (device && descriptorpool) device.destroyDescriptorPool(descriptorpool);
 		descriptorsets = {};
@@ -42,18 +29,16 @@ namespace UT {
 		device.freeDescriptorSets(descriptorpool, setsToFree);
 
 		// 优化：使用 unordered_set 提高查找效率
-		std::unordered_set<vk::DescriptorSet> toRemove(setsToFree.begin(), setsToFree.end());
 		descriptorsets.erase(
-			std::remove_if(descriptorsets.begin(), descriptorsets.end(),
-				[&toRemove](const vk::DescriptorSet& set) {
-					return toRemove.find(set) != toRemove.end();
-				}),
+			std::remove_if(
+				descriptorsets.begin(),
+				descriptorsets.end(),
+				[&setsToFree](const vk::DescriptorSet& set) {
+					return std::find(setsToFree.begin(), setsToFree.end(), set) != setsToFree.end();
+				}
+			),
 			descriptorsets.end()
 		);
-	}
-	DescriptorSetManager& DescriptorSetManager::setDevice(const vk::Device& device) {
-		this->device = device;
-		return *this;
 	}
 	std::vector<vk::DescriptorSet> DescriptorSetManager::allocateDescriptorSet(
 		const DescriptorSetAllocateInfo& allocateinfo)
@@ -81,7 +66,6 @@ namespace UT {
 	}
 	DescriptorPool DescriptorSetManager::createDescriptorPool(const DescriptorPoolSizeFlagBits& poolsizeflag, const vk::DescriptorPoolCreateFlags& flag)
 	{
-		DescriptorPoolCreateInfo createinfo;
 		vk::DescriptorPoolCreateInfo poolcreateinfo;
 		
 		poolcreateinfo.setFlags(flag);
@@ -108,15 +92,19 @@ namespace UT {
 			throw std::runtime_error("create DescriptorPool ERROR: false PoolSizeFlag");
 			break;
 		}
-		createinfo.setDevice(device)
-			.setDescriptorPoolCreateInfo(poolcreateinfo);
-		DescriptorPool pool = std::make_shared<DescriptorPool_>(createinfo);
+		DescriptorPool pool = std::make_shared<DescriptorPool_>();
+		pool->descriptorpool = scene.getDevice().createDescriptorPool(poolcreateinfo);
+		pool->device = scene.getDevice();
 		contpools.push_back(pool);
 		return pool;
 	}
+	DescriptorSetManager::DescriptorSetManager(Scene& scene):scene(scene)
+	{
+		connect(&scene, &Scene::deviceready, this, [this](const vk::Device& device) {
+			this->init();
+			},Qt::SingleShotConnection);
+	}
 	void DescriptorSetManager::init() {
-		if (!device) throw std::runtime_error("Init DescriptorSetManager ERROR: not set device");
-
 		// 初始化池大小配置
 		generalpoolSizes = {
 			{vk::DescriptorType::eUniformBuffer,        1024},

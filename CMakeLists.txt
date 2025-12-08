@@ -17,6 +17,10 @@ qt_add_executable(appqvulkan
     src/ui/MainWindow.cpp
     src/core/utils/CommandPool.cpp
     src/core/VulkanRenderer.cpp
+    src/core/resource/Scene.cpp
+    src/core/resource/PipelineManager.cpp
+    src/core/resource/ShaderManager.cpp
+    src/core/resource/DescriptorSetManager.cpp
 )
 target_include_directories(appqvulkan PRIVATE
     "${CMAKE_SOURCE_DIR}/Thirdparty/Include"

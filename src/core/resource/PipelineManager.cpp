@@ -1,31 +1,35 @@
-#include "Pipeline.hpp"
-#include "../utils/Vertex.hpp"
-namespace GM {
-	PipelineManager& PipelineManager::setDevice(const vk::Device& device) {
-		this->device = device;
-		return *this;
-	}
-	void PipelineManager::init() {
-		if (!device) throw std::runtime_error("Init PipelineManager ERROR: not set device");
-		vk::PipelineCacheCreateInfo cacheinfo;	
-		pipelinecache = device.createPipelineCache(cacheinfo);
+#include "PipelineManager.hpp"
+#include "../utils/utils.hpp"
+#include "Scene.hpp"
+namespace RS {
+
+
+	PipelineManager::PipelineManager(Scene& scene) :scene(scene)
+	{
+		connect(&scene, &Scene::deviceready, this, [this](const vk::Device& device) {
+			vk::PipelineCacheCreateInfo cacheinfo;
+			pipelinecache = device.createPipelineCache(cacheinfo);
+			}, Qt::SingleShotConnection);
+
 	}
 	PipelineManager::~PipelineManager()
 	{
 		destroy();
 	}
 	void PipelineManager::destroy() {
-		if (!device) return;
-		for (auto& pipeline : pipelines) {
-			if (pipeline) device.destroyPipeline(pipeline);
+		if (vk::Device device = scene.getDevice()) {
+			for (auto& pipeline : pipelines) {
+				if (pipeline) device.destroyPipeline(pipeline);
+			}
+			pipelines.clear();
+			for (auto& layout : pipelinelayouts) {
+				if (layout) device.destroyPipelineLayout(layout);
+			}
+			pipelinelayouts.clear();
+			if (pipelinecache) device.destroyPipelineCache(pipelinecache);
+			pipelinecache = nullptr;
 		}
-		pipelines.clear();
-		for (auto& layout : pipelinelayouts) {
-			if (layout) device.destroyPipelineLayout(layout);
-		}
-		pipelinelayouts.clear();
-		if (pipelinecache) device.destroyPipelineCache(pipelinecache);
-		pipelinecache = nullptr;
+
 	}
 
 	vk::Pipeline PipelineManager::createGraphPipeline(
@@ -116,7 +120,7 @@ namespace GM {
 			.setPColorBlendState(&colorblendstate)
 			.setLayout(pipelinelayout) // pipelinelayout
 			.setRenderPass(renderpass); // renderpass
-
+		auto device = scene.getDevice();
 		auto result = device.createGraphicsPipeline(pipelinecache, createinfo);
 		if (result.result != vk::Result::eSuccess) throw std::runtime_error("create grapics pipeline false");
 		if (!result.value) {
@@ -130,7 +134,7 @@ namespace GM {
 		const std::vector<vk::DescriptorSetLayout>& setlayouts,
 		const std::vector<vk::PushConstantRange>& pushconstants
 	) {
-
+		auto device = scene.getDevice();
 		vk::PipelineLayoutCreateInfo createinfo;
 		createinfo.setSetLayouts(setlayouts)
 			.setPushConstantRanges(pushconstants);

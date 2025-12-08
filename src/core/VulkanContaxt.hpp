@@ -5,7 +5,7 @@
 #include <mutex>
 #include "utils/utils.hpp"
 #include "qobject.h"
-
+#include "resource/Scene.hpp"
 class VulkanContaxt: public QObject {
 	Q_OBJECT
 signals:
@@ -35,5 +35,7 @@ private:
 	void initPhysicalDevice();
 	UT::QueueFamilyIndices findQueueFamilies(const vk::PhysicalDevice& device, const vk::SurfaceKHR& surface);
 	void initDevice(const vk::SurfaceKHR& surface);
-	
+	RS::Scene scene;
+
+	bool isemitdeviceready = false;//是否发送过deviceready信号
 };
