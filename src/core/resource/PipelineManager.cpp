@@ -4,7 +4,7 @@
 namespace RS {
 
 
-	PipelineManager::PipelineManager(Scene& scene) :scene(scene)
+	PipelineManager::PipelineManager(Scene& scene) :scene(scene), pipelinelayoutmanager(scene.pipelinelayoutmanager)
 	{
 		connect(&scene, &Scene::deviceready, this, [this](const vk::Device& device) {
 			vk::PipelineCacheCreateInfo cacheinfo;
@@ -18,14 +18,10 @@ namespace RS {
 	}
 	void PipelineManager::destroy() {
 		if (vk::Device device = scene.getDevice()) {
-			for (auto& pipeline : pipelines) {
-				if (pipeline) device.destroyPipeline(pipeline);
+			for (auto& [info,pipeline] : pipelines) {
+				if (pipeline->pipeline) device.destroyPipeline(pipeline->pipeline);
 			}
 			pipelines.clear();
-			for (auto& layout : pipelinelayouts) {
-				if (layout) device.destroyPipelineLayout(layout);
-			}
-			pipelinelayouts.clear();
 			if (pipelinecache) device.destroyPipelineCache(pipelinecache);
 			pipelinecache = nullptr;
 		}
@@ -127,10 +123,15 @@ namespace RS {
 			throw std::runtime_error("Pipeline is null, check shader interface, render pass, or vertex layout");
 		}
 		auto graphicepipeline = result.value;
-		pipelines.push_back(graphicepipeline);
+		//pipelines.push_back(graphicepipeline);
 		return graphicepipeline;
 	}
-	vk::PipelineLayout PipelineManager::createPipelineLayout(
+
+	PipelineLayoutManager::PipelineLayoutManager(Scene& scene) :scene(scene)
+	{
+	}
+
+	vk::PipelineLayout PipelineLayoutManager::createPipelineLayout(
 		const std::vector<vk::DescriptorSetLayout>& setlayouts,
 		const std::vector<vk::PushConstantRange>& pushconstants
 	) {
@@ -140,7 +141,22 @@ namespace RS {
 			.setPushConstantRanges(pushconstants);
 		auto pipelinelayout = device.createPipelineLayout(createinfo);
 		if (!pipelinelayout) throw std::runtime_error("create pipelinelayout false");
-		pipelinelayouts.push_back(pipelinelayout);
+		PipelineLayoutInfo layoutinfo;
+		layoutinfo.setLayouts = setlayouts;;
+		layoutinfo.pushConstants = pushconstants;
+		pipelinelayouts.insert({ layoutinfo, pipelinelayout });
 		return pipelinelayout;
 	}
+
+	void PipelineLayoutManager::destroy()
+	{
+		if (vk::Device device = scene.getDevice())
+		{
+			for (auto& [info,layout] : pipelinelayouts) {
+				if (layout) device.destroyPipelineLayout(layout);
+			}
+		}
+		pipelinelayouts.clear();
+	}
+
 }

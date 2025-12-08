@@ -17,6 +17,7 @@ namespace RS {
 		void destroy();
 		~Scene() = default;
 		vk::Device getDevice() const { return device; }
+		PipelineLayoutManager pipelinelayoutmanager;
 		PipelineManager pipelinemanager;
 		ShaderManager shadermanager;
 		DescriptorSetManager descriptorsetmanager;

@@ -1,6 +1,7 @@
 #include "Scene.hpp"
 
 RS::Scene::Scene() :
+	pipelinelayoutmanager(*this),
 	pipelinemanager(*this),
 	shadermanager(*this),
 	descriptorsetmanager(*this)
@@ -16,6 +17,7 @@ void RS::Scene::destroy()
 {
 	descriptorsetmanager.destroy();
 	pipelinemanager.destroy();
+	pipelinelayoutmanager.destroy();
 	shadermanager.destroy();
 }
 

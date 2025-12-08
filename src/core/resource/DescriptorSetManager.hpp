@@ -35,10 +35,10 @@ namespace RS {
 
 
 	enum class DescriptorPoolSizeFlagBits {
-		eGeneral,//��ͨ
-		eShadow,//��Ӱ
-		eCompute,//����
-		eTiny//С��
+		eGeneral,
+		eShadow,
+		eCompute,
+		eTiny
 	};
 	class DescriptorSetAllocateInfo {
 	public:
