@@ -17,11 +17,12 @@ qt_add_executable(appqvulkan
     src/ui/MainWindow.cpp
     src/core/utils/CommandPool.cpp
     src/core/VulkanRenderer.cpp
-    src/core/resource/Scene.cpp
+    src/core/resource/ResourceManager.cpp
     src/core/resource/PipelineManager.cpp
     src/core/resource/ShaderManager.cpp
     src/core/resource/DescriptorSetManager.cpp
     src/core/resource/MaterialManager.cpp
+    src/core/resource/RenderPassManager.cpp
     
 )
 target_include_directories(appqvulkan PRIVATE

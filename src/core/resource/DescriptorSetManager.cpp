@@ -1,5 +1,5 @@
 ﻿#include "DescriptorSetManager.hpp"
-#include "Scene.hpp"
+#include "ResourceManager.hpp"
 #include <algorithm>
 namespace RS {
 	void DescriptorPool_::destroy() {
@@ -93,14 +93,14 @@ namespace RS {
 			break;
 		}
 		DescriptorPool pool = std::make_shared<DescriptorPool_>();
-		pool->descriptorpool = scene.getDevice().createDescriptorPool(poolcreateinfo);
-		pool->device = scene.getDevice();
+		pool->descriptorpool = resourcemanager.getDevice().createDescriptorPool(poolcreateinfo);
+		pool->device = resourcemanager.getDevice();
 		contpools.push_back(pool);
 		return pool;
 	}
-	DescriptorSetManager::DescriptorSetManager(Scene& scene):scene(scene)
+	DescriptorSetManager::DescriptorSetManager(ResourceManager& resourcemanager):resourcemanager(resourcemanager)
 	{
-		connect(&scene, &Scene::deviceready, this, [this](const vk::Device& device) {
+		connect(&resourcemanager, &ResourceManager::deviceready, this, [this](const vk::Device& device) {
 			this->init();
 			},Qt::SingleShotConnection);
 	}

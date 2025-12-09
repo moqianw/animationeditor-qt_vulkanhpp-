@@ -58,11 +58,11 @@ namespace RS {
 		vk::DescriptorPoolCreateFlags poolflags;
 		DescriptorPoolSizeFlagBits poolsizetype;
 	};
-	class Scene;
+	class ResourceManager;
 	class DescriptorSetManager:public QObject {
 		Q_OBJECT
 	public:
-		DescriptorSetManager(Scene& scene);
+		DescriptorSetManager(ResourceManager& resourcemanager);
 		void init();
 		void destroy();
 
@@ -70,7 +70,7 @@ namespace RS {
 		std::vector<vk::DescriptorSet> allocateDescriptorSet(const DescriptorSetAllocateInfo& allocateinfo);
 
 	private:
-		Scene& scene;
+		ResourceManager& resourcemanager;
 		DescriptorPool createDescriptorPool(
 			const DescriptorPoolSizeFlagBits& poolsizeflag, const vk::DescriptorPoolCreateFlags& flag);
 

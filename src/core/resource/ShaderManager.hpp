@@ -49,18 +49,6 @@ namespace RS {
 		}
 	};
 
-	class ShaderCreateInfo {
-
-	public:
-		ShaderCreateInfo& setShaderInfos(const std::vector<ShaderInfo>& shaderinfos) {
-			this->shaderinfos = shaderinfos;
-			return *this;
-		}
-	private:
-		friend class ShaderManager;
-		std::vector<ShaderInfo> shaderinfos;
-	};
-
 	class Shader_;
 	using Shader = std::shared_ptr<Shader_>;
 
@@ -87,14 +75,16 @@ namespace RS {
 
 
 
-	class Scene;
+	class ResourceManager;
 	class ShaderManager {
 	private:
-		Scene& scene;
+		ResourceManager& resourcemanager;
 		std::unordered_map<ShaderInfo, Shader, ShaderInfoHash> shaders;
 	public:
-		ShaderManager(Scene& scene );
-		std::vector<Shader> loadShader(const ShaderCreateInfo& createinfo);
+		ShaderManager(ResourceManager& resourcemanager);
+		std::vector<Shader> loadShader(const std::vector<ShaderInfo>& createinfo);
+		std::vector<Shader> getShaders(const std::vector<ShaderInfo>& createinfo);
+		std::vector<vk::PipelineShaderStageCreateInfo> getPipelineShaderStageCreateInfos(const std::vector<ShaderInfo>& shaderinfos);
 		void destroyShaders(const std::vector<ShaderInfo>& shaderinfos);
 
 

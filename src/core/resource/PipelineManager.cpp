@@ -1,12 +1,12 @@
 #include "PipelineManager.hpp"
 #include "../utils/utils.hpp"
-#include "Scene.hpp"
+#include "ResourceManager.hpp"
 namespace RS {
 
 
-	PipelineManager::PipelineManager(Scene& scene) :scene(scene), pipelinelayoutmanager(scene.pipelinelayoutmanager)
+	PipelineManager::PipelineManager(ResourceManager& resourcemanager) :resourcemanager(resourcemanager), pipelinelayoutmanager(resourcemanager.pipelinelayoutmanager)
 	{
-		connect(&scene, &Scene::deviceready, this, [this](const vk::Device& device) {
+		connect(&resourcemanager, &ResourceManager::deviceready, this, [this](const vk::Device& device) {
 			vk::PipelineCacheCreateInfo cacheinfo;
 			pipelinecache = device.createPipelineCache(cacheinfo);
 			}, Qt::SingleShotConnection);
@@ -17,7 +17,7 @@ namespace RS {
 		destroy();
 	}
 	void PipelineManager::destroy() {
-		if (vk::Device device = scene.getDevice()) {
+		if (vk::Device device = resourcemanager.getDevice()) {
 			for (auto& [info,pipeline] : pipelines) {
 				if (pipeline->pipeline) device.destroyPipeline(pipeline->pipeline);
 			}
@@ -28,14 +28,10 @@ namespace RS {
 
 	}
 
-	vk::Pipeline PipelineManager::createGraphPipeline(
-		const vk::RenderPass& renderpass,
-		const vk::PipelineLayout& pipelinelayout,
-		const std::vector<vk::PipelineShaderStageCreateInfo>& shaderstages) {
+	Pipeline PipelineManager::createGraphPipeline(const PipelineInfo& pipelineinfo) {
 
 		vk::GraphicsPipelineCreateInfo createinfo;
 		//着色器
-
 
 		//顶点输入
 		vk::PipelineVertexInputStateCreateInfo vertexinputstate;
@@ -103,10 +99,10 @@ namespace RS {
 		std::vector<vk::DynamicState> dynamicstates = { vk::DynamicState::eViewport,vk::DynamicState::eScissor };
 		dynamicstate.setDynamicStates(dynamicstates);
 
-		if (!pipelinelayout) throw std::runtime_error("not create pipelinelayout");
-		if (!renderpass) throw std::runtime_error("not create renderpass");
+		if (!pipelineinfo.pipelinelayout) throw std::runtime_error("not create pipelinelayout");
+		if (!pipelineinfo.renderPass) throw std::runtime_error("not create renderpass");
 		createinfo.setPVertexInputState(&vertexinputstate)
-			.setStages(shaderstages)
+			.setStages(pipelineinfo.shaderstages)
 			.setPInputAssemblyState(&inputassembly)
 			.setPViewportState(&viewport)
 			.setPDynamicState(&dynamicstate)
@@ -114,43 +110,66 @@ namespace RS {
 			.setPMultisampleState(&multisamplestate)
 			.setPDepthStencilState(&depthstencilstate)
 			.setPColorBlendState(&colorblendstate)
-			.setLayout(pipelinelayout) // pipelinelayout
-			.setRenderPass(renderpass); // renderpass
-		auto device = scene.getDevice();
+			.setLayout(pipelineinfo.pipelinelayout) // pipelinelayout
+			.setRenderPass(pipelineinfo.renderPass); // renderpass
+		auto device = resourcemanager.getDevice();
 		auto result = device.createGraphicsPipeline(pipelinecache, createinfo);
 		if (result.result != vk::Result::eSuccess) throw std::runtime_error("create grapics pipeline false");
 		if (!result.value) {
 			throw std::runtime_error("Pipeline is null, check shader interface, render pass, or vertex layout");
 		}
 		auto graphicepipeline = result.value;
-		//pipelines.push_back(graphicepipeline);
-		return graphicepipeline;
+		auto pipeline = std::make_shared<Pipeline_>();
+		pipeline->pipeline = graphicepipeline;
+		pipeline->pipelinelayout = pipelineinfo.pipelinelayout;
+		pipelines.insert({ pipelineinfo, pipeline });
+		return pipeline;
 	}
 
-	PipelineLayoutManager::PipelineLayoutManager(Scene& scene) :scene(scene)
+	Pipeline PipelineManager::getGraphPipeline(const PipelineInfo& pipelineinfo)
+	{
+		auto pipeline = pipelines.find(pipelineinfo);
+		if (pipeline != pipelines.end()) {
+			return pipeline->second;
+		}
+		else
+		{
+			return createGraphPipeline(pipelineinfo);
+		}
+	}
+
+	PipelineLayoutManager::PipelineLayoutManager(ResourceManager& resourcemanager) :resourcemanager(resourcemanager)
 	{
 	}
 
 	vk::PipelineLayout PipelineLayoutManager::createPipelineLayout(
-		const std::vector<vk::DescriptorSetLayout>& setlayouts,
-		const std::vector<vk::PushConstantRange>& pushconstants
+		const PipelineLayoutInfo& layoutinfo
 	) {
-		auto device = scene.getDevice();
+		auto device = resourcemanager.getDevice();
 		vk::PipelineLayoutCreateInfo createinfo;
-		createinfo.setSetLayouts(setlayouts)
-			.setPushConstantRanges(pushconstants);
+		createinfo.setSetLayouts(layoutinfo.setLayouts)
+			.setPushConstantRanges(layoutinfo.pushConstants);
 		auto pipelinelayout = device.createPipelineLayout(createinfo);
 		if (!pipelinelayout) throw std::runtime_error("create pipelinelayout false");
-		PipelineLayoutInfo layoutinfo;
-		layoutinfo.setLayouts = setlayouts;;
-		layoutinfo.pushConstants = pushconstants;
+
 		pipelinelayouts.insert({ layoutinfo, pipelinelayout });
 		return pipelinelayout;
 	}
-
+	vk::PipelineLayout PipelineLayoutManager::getPipelineLayout(
+		const PipelineLayoutInfo& layoutinfo
+	) {
+		auto device = resourcemanager.getDevice();
+		auto layout = pipelinelayouts.find(layoutinfo);
+		if (layout != pipelinelayouts.end()) {
+			return layout->second;
+		}
+		else {
+			return createPipelineLayout(layoutinfo);
+		}
+	}
 	void PipelineLayoutManager::destroy()
 	{
-		if (vk::Device device = scene.getDevice())
+		if (vk::Device device = resourcemanager.getDevice())
 		{
 			for (auto& [info,layout] : pipelinelayouts) {
 				if (layout) device.destroyPipelineLayout(layout);

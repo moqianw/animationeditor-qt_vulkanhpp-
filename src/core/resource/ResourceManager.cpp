@@ -1,23 +1,25 @@
-#include "Scene.hpp"
+#include "ResourceManager.hpp"
 
-RS::Scene::Scene() :
+RS::ResourceManager::ResourceManager() :
+	renderpassmanager(*this),
 	pipelinelayoutmanager(*this),
 	pipelinemanager(*this),
 	shadermanager(*this),
 	descriptorsetmanager(*this)
 {
 }
-RS::Scene& RS::Scene::setDevice(const vk::Device& device)
+RS::ResourceManager& RS::ResourceManager::setDevice(const vk::Device& device)
 {
 	this->device = device;
 	emit deviceready(device);
 	return *this;
 }
-void RS::Scene::destroy()
+void RS::ResourceManager::destroy()
 {
 	descriptorsetmanager.destroy();
 	pipelinemanager.destroy();
 	pipelinelayoutmanager.destroy();
 	shadermanager.destroy();
+	renderpassmanager.destroy();
 }
 
