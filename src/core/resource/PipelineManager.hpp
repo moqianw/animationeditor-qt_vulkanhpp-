@@ -1,6 +1,8 @@
 #pragma once
 
 #include <vulkan/vulkan.hpp>
+#include "RenderPassManager.hpp"
+#include "ShaderManager.hpp"
 #include "qobject.h"
 #include "../utils/utils.hpp"
 namespace RS {
@@ -14,61 +16,29 @@ namespace RS {
 			uint32_t count;
 			vk::ShaderStageFlags stages;
 
-			bool operator==(const DescriptorBindingInfo& k) const {
-				return binding == k.binding &&
-					type == k.type &&
-					count == k.count &&
-					stages == k.stages;
-			}
+			bool operator==(const DescriptorBindingInfo& k) const;
 		};
 		struct DescriptorSetLayoutInfo {
 			uint32_t set;
 			std::vector<DescriptorBindingInfo> bindings;
 
-			bool operator==(const DescriptorSetLayoutInfo& k) const  {
-				return set == k.set &&
-					bindings == k.bindings;
-			}
+			bool operator==(const DescriptorSetLayoutInfo& k) const;
 		};
 		struct PushConstantInfo {
 			vk::ShaderStageFlags stages;
 			uint32_t offset;
 			uint32_t size;
 
-			bool operator==(const PushConstantInfo& k) const {
-				return stages == k.stages &&
-					offset == k.offset &&
-					size == k.size;
-			}
+			bool operator==(const PushConstantInfo& k) const;
 		};
 
 		std::vector<DescriptorSetLayoutInfo> sets;
 		std::vector<PushConstantInfo> pushConstants;
 
-		bool operator==(const PipelineLayoutInfo& rhs) const {
-			return sets == rhs.sets &&
-				pushConstants == rhs.pushConstants;
-		}
+		bool operator==(const PipelineLayoutInfo& rhs) const;
 	};
 	struct PipelineLayoutInfoHash {
-		size_t operator()(const PipelineLayoutInfo& k) const {
-			size_t h = 0;
-			for (auto& set : k.sets) {
-				UT::hashCombine(h, set.set);
-				for (auto& b : set.bindings) {
-					UT::hashCombine(h, b.binding);
-					UT::hashCombine(h, static_cast<VkDescriptorType>(b.type));
-					UT::hashCombine(h, b.count);
-					UT::hashCombine(h, static_cast<VkShaderStageFlags>( b.stages));
-				}
-			}
-			for (auto& pc : k.pushConstants) {
-				UT::hashCombine(h, static_cast<VkShaderStageFlags>(pc.stages));
-				UT::hashCombine(h, pc.offset);
-				UT::hashCombine(h, pc.size);
-			}
-			return h;
-		}
+		size_t operator()(const PipelineLayoutInfo& k) const;
 	};
 	class PipelineLayoutManager {
 	public:
@@ -85,67 +55,34 @@ namespace RS {
 	};
 
 
-
-
-	class RenderPassInfo;
 	class PipelineInfo {
 	public:
 		PipelineLayoutInfo pipelinelayout;
 		RenderPassInfo renderPass;
-		std::vector<vk::PipelineShaderStageCreateInfo> shaderstages;
+		std::vector<ShaderInfo> shaderstages;
 		// Fixed pipeline state
-		VkPrimitiveTopology topology;
-		VkPolygonMode polygonMode;
-		VkCullModeFlags cullMode;
-		VkFrontFace frontFace;
+		vk::PrimitiveTopology topology;
+		vk::PolygonMode polygonMode;
+		vk::CullModeFlags cullMode;
+		vk::FrontFace frontFace;
 
 		bool depthTest;
 		bool depthWrite;
-		VkCompareOp depthCompare;
+		vk::CompareOp depthCompare;
 
 		bool blendEnable;
-		VkBlendFactor srcColor;
-		VkBlendFactor dstColor;
-		VkBlendOp blendOp;
-		bool operator==(const PipelineInfo& rhs) const {
-			return pipelinelayout == rhs.pipelinelayout &&
-				renderPass == rhs.renderPass &&
-				shaderstages == rhs.shaderstages &&
-				topology == rhs.topology &&
-				polygonMode == rhs.polygonMode &&
-				cullMode == rhs.cullMode &&
-				frontFace == rhs.frontFace &&
-				depthTest == rhs.depthTest &&
-				depthWrite == rhs.depthWrite &&
-				depthCompare == rhs.depthCompare &&
-				blendEnable == rhs.blendEnable &&
-				srcColor == rhs.srcColor &&
-				dstColor == rhs.dstColor &&
-				blendOp == rhs.blendOp;
-		}
+
+		vk::BlendFactor srcColor;
+		vk::BlendFactor dstColor;
+		vk::BlendOp colorBlendOp;
+
+		vk::BlendFactor srcAlpha;
+		vk::BlendFactor dstAlpha;
+		vk::BlendOp alphaBlendOp;
+		bool operator==(const PipelineInfo& rhs) const;
 	};
 	struct PipelineInfoHash {
-		size_t operator()(const PipelineInfo& k) const {
-			size_t h = 0;
-			UT::hashCombine(h, static_cast<size_t>(PipelineLayoutInfoHash{}(k.pipelinelayout)));
-			UT::hashCombine(h, k.renderPassKey);
-
-			UT::hashCombine(h, k.topology);
-			UT::hashCombine(h, k.polygonMode);
-			UT::hashCombine(h, k.cullMode);
-			UT::hashCombine(h, k.frontFace);
-
-			UT::hashCombine(h, k.depthTestEnable);
-			UT::hashCombine(h, k.depthWriteEnable);
-			UT::hashCombine(h, k.depthCompareOp);
-
-			UT::hashCombine(h, k.blendEnable);
-			UT::hashCombine(h, k.srcColorBlend);
-			UT::hashCombine(h, k.dstColorBlend);
-			UT::hashCombine(h, k.colorBlendOp);
-
-			return h;
-		}
+		size_t operator()(const PipelineInfo& k) const;
 	};
 	class Pipeline_ {
 	public:
@@ -171,6 +108,8 @@ namespace RS {
 	private:
 		ResourceManager& resourcemanager;
 		PipelineLayoutManager& pipelinelayoutmanager;
+		RenderPassManager& renderpassmanager;
+		ShaderManager& shadermanager;
 		std::unordered_map<PipelineInfo,Pipeline, PipelineInfoHash> pipelines;
 		vk::PipelineCache pipelinecache = nullptr;
 	};

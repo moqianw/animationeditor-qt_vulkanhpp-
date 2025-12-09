@@ -2,6 +2,15 @@
 #include "../utils/utils.hpp"
 #include "ResourceManager.hpp"
 namespace RS {
+	size_t ShaderInfoHash::operator()(const ShaderInfo& k) const {
+
+		size_t h1 = std::hash<std::string>()(k.path);
+		size_t h2 = std::hash<uint32_t>()(static_cast<uint32_t>(k.flag));
+		UT::hashCombine(h2, h1);
+		return h2;
+	}
+
+
 	ShaderManager::ShaderManager(ResourceManager& resourcemanager) : resourcemanager(resourcemanager)
 	{
 	}
@@ -59,6 +68,14 @@ namespace RS {
 		for (auto& info : shaderinfos) {
 			shaders.erase(info);
 		}
+	}
+
+	void ShaderManager::destroy()
+	{
+		for(auto& [info, shader] : shaders) {
+			resourcemanager.getDevice().destroyShaderModule(shader->shadersodule);
+		}
+		shaders.clear();
 	}
 
 }

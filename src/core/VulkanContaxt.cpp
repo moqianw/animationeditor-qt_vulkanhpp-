@@ -16,7 +16,7 @@ void VulkanContaxt::emitDeviceReady(vk::SurfaceKHR surface) {
 	std::lock_guard<std::mutex> lock(devicemutex);
 	if (!isemitdeviceready) {
 		initDevice(surface);
-		scene.setDevice(device);
+		resourcemanager.setDevice(device);
 
 		isemitdeviceready = true;
 	}
@@ -31,7 +31,7 @@ void VulkanContaxt::destroy() {
 	try {
 		if (device) {
 			device.waitIdle();
-			scene.destroy();
+			resourcemanager.destroy();
 			device.destroy();
 		}
 		if (instance) instance.destroy();

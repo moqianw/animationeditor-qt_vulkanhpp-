@@ -23,6 +23,7 @@ qt_add_executable(appqvulkan
     src/core/resource/DescriptorSetManager.cpp
     src/core/resource/MaterialManager.cpp
     src/core/resource/RenderPassManager.cpp
+    src/core/resource/FrameBufferManager.cpp
     
 )
 target_include_directories(appqvulkan PRIVATE
