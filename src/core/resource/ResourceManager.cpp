@@ -6,7 +6,8 @@ RS::ResourceManager::ResourceManager() :
 	pipelinemanager(*this),
 	shadermanager(*this),
 	descriptorsetmanager(*this),
-	framebuffermanager(*this)
+	framebuffermanager(*this),
+	materialmanager(*this)
 {
 }
 RS::ResourceManager& RS::ResourceManager::setDevice(const vk::Device& device)

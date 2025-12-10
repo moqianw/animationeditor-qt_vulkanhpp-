@@ -1,58 +1,43 @@
 #pragma once
 
 #include <vulkan/vulkan.hpp>
-
+#include "ShaderManager.hpp"
+#include "RenderPassManager.hpp"
+#include "PipelineManager.hpp"
+#include <string>
 namespace RS {
-	//class Material {
-	//public:
-	//	std::shared_ptr<Shader> shader;
-	//	~Material() {
-	//		shader.reset();
-	//	}
-	//};
-	//class MaterialInstance {
-	//public:
-	//	std::shared_ptr<Material> parent;
-	//	~MaterialInstance() {
-	//		parent.reset();
-	//	}
-	//};
-	//class RHIMaterial{
-	//public:
-	//	std::shared_ptr<MaterialInstance> material;
-	//	vk::DescriptorSet descriptorset = nullptr;
-	//	vk::Pipeline pipeline = nullptr;
-	//	vk::PipelineLayout pipelinelayout = nullptr;
-	//	~RHIMaterial() {
-	//		material.reset();
-	//		descriptorset = nullptr;
-	//		pipeline = nullptr;
-	//		pipelinelayout = nullptr;
-	//	}
-	//};
-	//class MaterialManager {
-	//public:
-	//	void begin(const vk::Device& device);
-	//	void destroy();
-	//	MaterialManager() = default;
-	//	~MaterialManager() {
-	//		destroy();
-	//	}
+	class ResourceManager;
+	class MaterialInfo {
+	public:
+		std::string name;
+		PipelineLayoutInfo layoutinfo;
+		PipelineInfo pipelineinfo;
+		RenderPassInfo renderpassinfo;
+		MaterialInfo operator=(const MaterialInfo& other) = default;
+	};
+	class Material_{
+	public:
+	private:
+		friend class MaterialManager;
+		std::string name;
+		Pipeline pipeline;
+		vk::DescriptorSet persistentDescriptorSet;
+		std::vector<vk::DescriptorSet> frameDescriptorSets;
 
-	//	std::shared_ptr<Material> createMaterial(const std::shared_ptr<Shader>& shader);
-	//	std::shared_ptr<RHIMaterial> createRHIMaterial(const std::shared_ptr<MaterialInstance>& material);
+	};
+	using Material = std::shared_ptr<Material_>;
+	class MaterialLoader {
+	public:
+		MaterialInfo loadFromFile(const std::string& path);
+	};
+	class MaterialManager {
+	public:
+		MaterialManager(ResourceManager& resourcemanager);
+		~MaterialManager() = default;
+		Material createMaterial(const MaterialInfo& materialinfo);
+		void destroy();
+	private:
+		ResourceManager& resourcemanager;
 
-
-	//	std::vector<vk::DescriptorSet> createDescriptorSet(
-	//		const std::vector<vk::DescriptorSetLayout>& setlayout);
-	//	void addDescriptorSetLayouts(const std::vector<vk::DescriptorSetLayout>& setlayouts);
-	//	
-	//private:
-	//	std::vector<vk::DescriptorSetLayout> descriptorsetlayouts;
-	//	std::vector<std::shared_ptr<UT::DescriptorPool>> descriptorpools;
-	//	std::vector<std::shared_ptr<Material>> materials;
-
-	//	vk::Device device = nullptr;
-
-	//};
+	};
 }

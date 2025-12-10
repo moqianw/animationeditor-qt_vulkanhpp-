@@ -16,7 +16,7 @@ namespace RS {
 			vk::DescriptorType type;
 			uint32_t count;
 			vk::ShaderStageFlags stages;
-
+			DescriptorBindingInfo& operator=(const DescriptorBindingInfo& other) = default;
 			bool operator==(const DescriptorBindingInfo& k) const;
 		};
 		struct DescriptorSetLayoutInfo {
@@ -49,9 +49,12 @@ namespace RS {
 
 		vk::PipelineLayout getPipelineLayout(
 			const PipelineLayoutInfo& layoutinfo);
+		std::vector<vk::DescriptorSetLayout> getDescriptorSetLayouts(
+			const PipelineLayoutInfo& layoutinfo);
 		void destroy();
 	private:
 		ResourceManager& resourcemanager;
+		std::unordered_map<PipelineLayoutInfo, std::vector<vk::DescriptorSetLayout>, PipelineLayoutInfoHash> setlayouts;
 		std::unordered_map<PipelineLayoutInfo, vk::PipelineLayout, PipelineLayoutInfoHash> pipelinelayouts;
 	};
 
@@ -81,6 +84,7 @@ namespace RS {
 		vk::BlendFactor srcAlpha;
 		vk::BlendFactor dstAlpha;
 		vk::BlendOp alphaBlendOp;
+		PipelineInfo& operator=(const PipelineInfo& other) = default;
 		bool operator==(const PipelineInfo& rhs) const;
 	};
 	struct PipelineInfoHash {

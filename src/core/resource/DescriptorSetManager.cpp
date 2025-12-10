@@ -23,68 +23,70 @@ namespace RS {
 		device.resetDescriptorPool(descriptorpool);
 		descriptorsets.clear();
 	}
-	void DescriptorPool_::free(const std::vector<vk::DescriptorSet>& setsToFree) {
-		if (setsToFree.empty()) return;
-
-		device.freeDescriptorSets(descriptorpool, setsToFree);
-
-		// 优化：使用 unordered_set 提高查找效率
-		descriptorsets.erase(
-			std::remove_if(
-				descriptorsets.begin(),
-				descriptorsets.end(),
-				[&setsToFree](const vk::DescriptorSet& set) {
-					return std::find(setsToFree.begin(), setsToFree.end(), set) != setsToFree.end();
-				}
-			),
-			descriptorsets.end()
-		);
-	}
 	std::vector<vk::DescriptorSet> DescriptorSetManager::allocateDescriptorSet(
-		const DescriptorSetAllocateInfo& allocateinfo)
+		const DescriptorSetAllocateInfo& info)
 	{
-		if (allocateinfo.layouts.empty()) {
-			throw std::runtime_error("DescriptorSetManager::allocateDescriptorSet ERROR: empty layouts");
+		if (info.layouts.empty()) {
+			throw std::runtime_error(
+				"DescriptorSetManager::allocateDescriptorSet: empty layouts"
+			);
 		}
 
-		for (auto pool : contpools) {
+		std::vector<DescriptorPool>* pools = nullptr;
+
+		if (info.lifetimetype == DescriptorLifetimeFlag::ePersistent) {
+			pools = &contpools;
+		}
+		else {
+			pools = &framepools[info.frameindex];
+		}
+
+		for (auto it = pools->rbegin(); it != pools->rend(); ++it) {
 			try {
-				return pool->allocateDescriptorSets(allocateinfo.layouts);
+				return (*it)->allocateDescriptorSets(info.layouts);
 			}
-			catch (vk::OutOfPoolMemoryError&) {
-				continue;
+			catch (const vk::OutOfPoolMemoryError&) {
 			}
 		}
+		DescriptorPool pool =
+			createDescriptorPool(info.poolsizetype, info.poolflags);
 
-		auto pool = createDescriptorPool(allocateinfo.poolsizetype, allocateinfo.poolflags);
+		auto sets = pool->allocateDescriptorSets(info.layouts);
+		pools->push_back(pool);
 
-		try {
-			return pool->allocateDescriptorSets(allocateinfo.layouts);
-		} catch (const std::exception& e) {
-			throw std::runtime_error(std::string("DescriptorSetManager::allocateDescriptorSet ERROR: ") + e.what());
+		return sets;
+
+	}
+	void DescriptorSetManager::resetFramePools(const uint32_t& frameindex)
+	{
+		if (frameindex >= framepools.size()) {
+			return;
+		}
+		for (auto& computepoolSizes : framepools[frameindex]) {
+			computepoolSizes->reset();
 		}
 	}
-	DescriptorPool DescriptorSetManager::createDescriptorPool(const DescriptorPoolSizeFlagBits& poolsizeflag, const vk::DescriptorPoolCreateFlags& flag)
+	DescriptorPool DescriptorSetManager::createDescriptorPool(const DescriptorPoolSizeFlag& poolsizeflag, const vk::DescriptorPoolCreateFlags& flag)
 	{
 		vk::DescriptorPoolCreateInfo poolcreateinfo;
 		
 		poolcreateinfo.setFlags(flag);
 		switch (poolsizeflag)
 		{
-		case DescriptorPoolSizeFlagBits::eGeneral:
+		case DescriptorPoolSizeFlag::eGeneral:
 			poolcreateinfo.setMaxSets(512)
 				.setPoolSizes(generalpoolSizes);
 			break;
-		case DescriptorPoolSizeFlagBits::eShadow:
+		case DescriptorPoolSizeFlag::eShadow:
 			poolcreateinfo.setMaxSets(256)
 				.setPoolSizes(shadowpoolSizes);
 			break;
 
-		case DescriptorPoolSizeFlagBits::eCompute:
+		case DescriptorPoolSizeFlag::eCompute:
 			poolcreateinfo.setMaxSets(256)
 				.setPoolSizes(computepoolSizes);
 			break;
-		case DescriptorPoolSizeFlagBits::eTiny:
+		case DescriptorPoolSizeFlag::eTiny:
 			poolcreateinfo.setMaxSets(64)
 				.setPoolSizes(tinypoolSizes);
 			break;
@@ -95,7 +97,6 @@ namespace RS {
 		DescriptorPool pool = std::make_shared<DescriptorPool_>();
 		pool->descriptorpool = resourcemanager.getDevice().createDescriptorPool(poolcreateinfo);
 		pool->device = resourcemanager.getDevice();
-		contpools.push_back(pool);
 		return pool;
 	}
 	DescriptorSetManager::DescriptorSetManager(ResourceManager& resourcemanager):resourcemanager(resourcemanager)
@@ -126,12 +127,13 @@ namespace RS {
 			{vk::DescriptorType::eUniformBuffer,        64},
 			{vk::DescriptorType::eCombinedImageSampler, 64},
 		};
-
+		framepools.resize(resourcemanager.getFramesInFlight());
 		// 预创建常用池
-		createDescriptorPool(DescriptorPoolSizeFlagBits::eGeneral,
-							vk::DescriptorPoolCreateFlagBits::eUpdateAfterBind);
-		createDescriptorPool(DescriptorPoolSizeFlagBits::eTiny,
-							vk::DescriptorPoolCreateFlagBits::eUpdateAfterBind);
+		contpools.push_back(createDescriptorPool(DescriptorPoolSizeFlag::eGeneral,
+							vk::DescriptorPoolCreateFlagBits::eUpdateAfterBind));
+		for (int i = 0; i < framepools.size(); ++i)
+			framepools[i].push_back(createDescriptorPool(DescriptorPoolSizeFlag::eTiny,
+				vk::DescriptorPoolCreateFlagBits::eUpdateAfterBind));
 	}
 
 	void DescriptorSetManager::destroy() {
@@ -141,10 +143,11 @@ namespace RS {
 			}
 		}
 		contpools.clear();
-		for (auto& pool : framepools) {
-			if (pool) {
-				pool->destroy();
-			}
+		for (auto& pools : framepools) {
+			for (auto& pool : pools)
+				if (pool) {
+					pool->destroy();
+				}
 		}
 		framepools.clear();
 	}

@@ -12,7 +12,6 @@ namespace RS {
 		~DescriptorPool_() = default;
 		std::vector<vk::DescriptorSet> allocateDescriptorSets(const std::vector<vk::DescriptorSetLayout>& layouts);
 		void reset();
-		void free(const std::vector<vk::DescriptorSet>& setsToFree);
 		DescriptorPool_(const DescriptorPool_& other) = delete;
 		DescriptorPool_& operator=(const DescriptorPool_& other) = delete;
 
@@ -34,11 +33,15 @@ namespace RS {
 	using DescriptorPool = std::shared_ptr<DescriptorPool_>;
 
 
-	enum class DescriptorPoolSizeFlagBits {
+	enum class DescriptorPoolSizeFlag {
 		eGeneral,
 		eShadow,
 		eCompute,
 		eTiny
+	};
+	enum class DescriptorLifetimeFlag {
+		ePersistent,   // 长期存在（material、texture）
+		ePerFrame      // 每帧 reset（camera、frame ubo）
 	};
 	class DescriptorSetAllocateInfo {
 	public:
@@ -50,15 +53,26 @@ namespace RS {
 			this->poolflags = poolflags;
 			return *this;
 		}	
-		DescriptorSetAllocateInfo& setDescriptorPoolSizeFlags(const DescriptorPoolSizeFlagBits& poolsizetype) {
+		DescriptorSetAllocateInfo& setDescriptorPoolSizeFlags(const DescriptorPoolSizeFlag& poolsizetype) {
 			this->poolsizetype = poolsizetype;
+			return *this;
+		}
+		DescriptorSetAllocateInfo& setDescriptorLifetimeFlags(const DescriptorLifetimeFlag& lifetimetype) {
+			this->lifetimetype = lifetimetype;
+			return *this;
+		}
+		DescriptorSetAllocateInfo& setFrameIndex(const uint32_t& frameindex) {
+			this->frameindex = frameindex;
 			return *this;
 		}
 		std::vector<vk::DescriptorSetLayout> layouts;
 		vk::DescriptorPoolCreateFlags poolflags;
-		DescriptorPoolSizeFlagBits poolsizetype;
+		DescriptorPoolSizeFlag poolsizetype;
+		DescriptorLifetimeFlag lifetimetype;
+		uint32_t frameindex = 0;
 	};
 	class ResourceManager;
+
 	class DescriptorSetManager:public QObject {
 		Q_OBJECT
 	public:
@@ -66,13 +80,12 @@ namespace RS {
 		void init();
 		void destroy();
 
-		// 核心分配接口
 		std::vector<vk::DescriptorSet> allocateDescriptorSet(const DescriptorSetAllocateInfo& allocateinfo);
-
+		void resetFramePools(const uint32_t& frameindex);
 	private:
 		ResourceManager& resourcemanager;
 		DescriptorPool createDescriptorPool(
-			const DescriptorPoolSizeFlagBits& poolsizeflag, const vk::DescriptorPoolCreateFlags& flag);
+			const DescriptorPoolSizeFlag& poolsizeflag, const vk::DescriptorPoolCreateFlags& flag);
 
 
 		std::vector<vk::DescriptorPoolSize> generalpoolSizes;
@@ -81,6 +94,6 @@ namespace RS {
 		std::vector<vk::DescriptorPoolSize> tinypoolSizes;
 
 		std::vector<DescriptorPool> contpools;
-		std::vector<DescriptorPool> framepools;
+		std::vector<std::vector<DescriptorPool>> framepools;
 	};
 }

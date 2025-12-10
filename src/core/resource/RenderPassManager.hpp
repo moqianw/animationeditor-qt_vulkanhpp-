@@ -9,7 +9,7 @@ namespace RS {
 		vk::Format colorFormat;
 		vk::Format depthFormat;
 		vk::SampleCountFlagBits samples;
-
+		RenderPassInfo& operator=(const RenderPassInfo& other) = default;
 		bool operator==(const RenderPassInfo& rhs) const;
 	};
 	struct RenderPassInfoHash {

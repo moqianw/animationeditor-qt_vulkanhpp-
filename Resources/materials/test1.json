@@ -1,0 +1,62 @@
+{
+  "name": "WoodMaterial",
+  "shaders": [
+    {
+      "path": "shaders/wood.vert.spv",
+      "stage": "vertex",
+      "entry": "main",
+      "descriptorSets": [
+        {
+          "set": 0,
+          "bindings": [
+            {
+              "binding": 0,
+              "type": "uniformBuffer",
+              "count": 1,
+              "stages": [ "vertex" ]
+            },
+            {
+              "binding": 1,
+              "type": "combinedImageSampler",
+              "count": 1,
+              "stages": [ "fragment" ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "shaders/wood.frag.spv",
+      "stage": "fragment",
+      "entry": "main",
+      "descriptorSets": [
+        {
+          "set": 0,
+          "bindings": [
+            {
+              "binding": 1,
+              "type": "combinedImageSampler",
+              "count": 1,
+              "stages": [ "fragment" ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "albedoColor": [ 1.0, 0.8, 0.6, 1.0 ],
+    "roughness": 0.5,
+    "metallic": 0.0
+  },
+  "textures": {
+    "albedoMap": "textures/wood_albedo.png",
+    "normalMap": "textures/wood_normal.png"
+  },
+  "renderState": {
+    "cullMode": "back",
+    "depthTest": true,
+    "depthWrite": true,
+    "blendEnable": false
+  }
+}

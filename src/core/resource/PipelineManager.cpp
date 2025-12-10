@@ -133,7 +133,7 @@ namespace RS{
 			.setPushConstantRanges(pushconstants);
 		auto pipelinelayout = device.createPipelineLayout(createinfo);
 		if (!pipelinelayout) throw std::runtime_error("create pipelinelayout false");
-
+		this->setlayouts.insert({ layoutinfo, setlayouts });
 		pipelinelayouts.insert({ layoutinfo, pipelinelayout });
 		return pipelinelayout;
 	}
@@ -147,6 +147,17 @@ namespace RS{
 		}
 		else {
 			return createPipelineLayout(layoutinfo);
+		}
+	}
+	std::vector<vk::DescriptorSetLayout> PipelineLayoutManager::getDescriptorSetLayouts(const PipelineLayoutInfo& layoutinfo)
+	{
+		auto it = setlayouts.find(layoutinfo);
+		if (it != setlayouts.end()) {
+			return it->second;
+		}
+		else {
+			getPipelineLayout(layoutinfo);
+			return setlayouts[layoutinfo];
 		}
 	}
 	void PipelineLayoutManager::destroy()
