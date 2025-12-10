@@ -5,7 +5,7 @@
 #include <vector>
 #include <string>
 #include <unordered_map>
-#include "../utils/utils.hpp"
+
 namespace RS {
 	struct ShaderInfo {
 		std::string path;

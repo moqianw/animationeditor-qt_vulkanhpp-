@@ -1,10 +1,11 @@
 #pragma once
 
 #include <vulkan/vulkan.hpp>
+#include <vector>
+#include <unordered_map>
+#include "qobject.h"
 #include "RenderPassManager.hpp"
 #include "ShaderManager.hpp"
-#include "qobject.h"
-#include "../utils/utils.hpp"
 namespace RS {
 	class ResourceManager;
 
@@ -54,6 +55,7 @@ namespace RS {
 		std::unordered_map<PipelineLayoutInfo, vk::PipelineLayout, PipelineLayoutInfoHash> pipelinelayouts;
 	};
 
+	class ShaderInfo;
 
 	class PipelineInfo {
 	public:
@@ -93,7 +95,6 @@ namespace RS {
 		vk::PipelineLayout pipelinelayout = nullptr;
 	};
 	using Pipeline = std::shared_ptr<Pipeline_>;
-
 
 	class PipelineManager :public QObject{
 		Q_OBJECT

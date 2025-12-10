@@ -1,6 +1,9 @@
 #include "ShaderManager.hpp"
-#include "../utils/utils.hpp"
+
+
 #include "ResourceManager.hpp"
+#include "../utils/utils.hpp"
+
 namespace RS {
 	size_t ShaderInfoHash::operator()(const ShaderInfo& k) const {
 

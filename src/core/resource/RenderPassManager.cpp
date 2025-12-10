@@ -1,5 +1,7 @@
 #include "RenderPassManager.hpp"
+
 #include "ResourceManager.hpp"
+#include "../utils/utils.hpp"
 namespace RS {
 	RenderPassManager::RenderPassManager(ResourceManager& resourcemanager) :resourcemanager(resourcemanager)
 	{
@@ -77,5 +79,17 @@ namespace RS {
 		else {
 			return createRenderPass(info);
 		}
+	}
+	bool RenderPassInfo::operator==(const RenderPassInfo& rhs) const {
+		return colorFormat == rhs.colorFormat &&
+			depthFormat == rhs.depthFormat &&
+			samples == rhs.samples;
+	}
+	size_t RenderPassInfoHash::operator()(const RenderPassInfo& k) const {
+		size_t h = 0;
+		UT::hashCombine(h, static_cast<uint32_t>(k.colorFormat));
+		UT::hashCombine(h, static_cast<uint32_t>(k.depthFormat));
+		UT::hashCombine(h, static_cast<uint32_t>(k.samples));
+		return h;
 	}
 }

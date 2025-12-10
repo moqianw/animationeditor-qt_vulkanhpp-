@@ -4,6 +4,7 @@
 #include "ShaderManager.hpp"
 #include "DescriptorSetManager.hpp"
 #include "RenderPassManager.hpp"
+#include "FrameBufferManager.hpp"
 #include "qobject.h"
 namespace RS {
 	class ResourceManager:public QObject{
@@ -23,5 +24,6 @@ namespace RS {
 		ShaderManager shadermanager;
 		DescriptorSetManager descriptorsetmanager;
 		RenderPassManager renderpassmanager;
+		FrameBufferManager framebuffermanager;
 	};
 }

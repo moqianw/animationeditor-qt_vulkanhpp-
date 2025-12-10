@@ -1,6 +1,6 @@
 #include "PipelineManager.hpp"
-#include "../utils/utils.hpp"
 #include "ResourceManager.hpp"
+#include "../utils/utils.hpp"
 namespace RS {
 	bool PipelineLayoutInfo::DescriptorBindingInfo::operator==(const DescriptorBindingInfo& k) const {
 		return binding == k.binding &&
