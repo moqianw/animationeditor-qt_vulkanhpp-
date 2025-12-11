@@ -15,6 +15,7 @@ qt_add_executable(appqvulkan
     src/core/VulkanWindow.cpp
     src/core/VulkanContaxt.cpp
     src/ui/MainWindow.cpp
+    src/core/engine/Mapping.hpp
     src/core/utils/CommandPool.cpp
     src/core/VulkanRenderer.cpp
     src/core/resource/ResourceManager.cpp

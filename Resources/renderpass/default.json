@@ -1,0 +1,48 @@
+{
+  "attachments": [
+    {
+      "format": "eB8G8R8A8Unorm",
+      "samples": "e1",
+      "initialLayout": "eUndefined",
+      "finalLayout": "ePresentSrcKHR",
+      "loadOp": "eClear",
+      "storeOp": "eStore"
+    }
+  ],
+
+  "depthAttachment": {
+    "format": "eD32Sfloat",
+    "samples": "e1",
+    "initialLayout": "eUndefined",
+    "finalLayout": "eDepthStencilAttachmentOptimal",
+    "loadOp": "eClear",
+    "storeOp": "eStore"
+  },
+
+  "subpasses": [
+    {
+      "bindPoint": "eGraphics",
+      "colorRefs": [
+        {
+          "attachment": 0,
+          "layout": "eColorAttachmentOptimal"
+        }
+      ],
+      "depthRef": {
+        "attachment": 1,
+        "layout": "eDepthStencilAttachmentOptimal"
+      }
+    }
+  ],
+
+  "dependencies": [
+    {
+      "srcSubpass": "eExternal",
+      "dstSubpass": 0,
+      "srcStage": "eColorAttachmentOutput",
+      "dstStage": "eColorAttachmentOutput",
+      "srcAccess": "eNone",
+      "dstAccess": "eColorAttachmentWrite"
+    }
+  ]
+}

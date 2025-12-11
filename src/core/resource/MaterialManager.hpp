@@ -13,7 +13,7 @@ namespace RS {
 		PipelineLayoutInfo layoutinfo;
 		PipelineInfo pipelineinfo;
 		RenderPassInfo renderpassinfo;
-		MaterialInfo operator=(const MaterialInfo& other) = default;
+		//MaterialInfo operator=(const MaterialInfo& other);
 	};
 	class Material_{
 	public:

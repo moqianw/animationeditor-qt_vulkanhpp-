@@ -1,4 +1,5 @@
 #pragma once
+
 #include <vulkan/vulkan.hpp>
 #include "PipelineManager.hpp"
 #include "ShaderManager.hpp"
