@@ -20,6 +20,11 @@ namespace RS {
 			renderpasses.clear();
 		}
 	}
+	vk::RenderPass RenderPassManager::createRenderPass(const std::string& filepath)
+	{
+	 	auto info =  RenderPassLoader::loadFromFile(filepath);
+		return getRenderPass(info);
+	}
 	vk::RenderPass RenderPassManager::createRenderPass(const RenderPassInfo& info) {
 		vk::RenderPassCreateInfo createinfo;
 		std::vector<vk::AttachmentDescription> attachments;
@@ -191,6 +196,41 @@ namespace RS {
 			attachment.stencilStoreOp =EG::stringToVkAttachmentStoreOp(infoobject["stencilStoreOp"].toString().toStdString());
 			attachment.samples = static_cast<vk::SampleCountFlagBits>(infoobject["samples"].toInt());
 			renderpassinfo.attachments.push_back(attachment);
+		}
+		QJsonArray subpassarray = object["subpasses"].toArray();
+		for (auto subpassinfo : subpassarray) {
+			QJsonObject infoobject = subpassinfo.toObject();
+			RenderPassInfo::SubpassDesc subpass;
+			subpass.bindpoint = EG::stringToVkPipelineBindPoint(infoobject["bindPoint"].toString().toStdString());
+			QJsonArray colorrefarray = infoobject["colorRefs"].toArray();
+			for (auto colorrefinfo : colorrefarray) {
+				QJsonObject colorrefobject = colorrefinfo.toObject();
+				RenderPassInfo::AttachmentReference colorref;
+				colorref.attachment = static_cast<uint32_t>(colorrefobject["attachment"].toInt());
+				colorref.layout = EG::stringToVkImageLayout(colorrefobject["layout"].toString().toStdString());
+				subpass.colorRefs.push_back(colorref);
+			}
+			if (infoobject.contains("depthRef")) {
+				QJsonObject depthrefobject = infoobject["depthRef"].toObject();
+				RenderPassInfo::AttachmentReference depthref;
+				depthref.attachment = static_cast<uint32_t>(depthrefobject["attachment"].toInt());
+				depthref.layout = EG::stringToVkImageLayout(depthrefobject["layout"].toString().toStdString());
+				subpass.depthRef = depthref;
+			}
+			renderpassinfo.subpasses.push_back(subpass);
+		}
+		QJsonArray dependencyarray = object["dependencies"].toArray();
+		for (auto dependencyinfo : dependencyarray) {
+			QJsonObject infoobject = dependencyinfo.toObject();
+			RenderPassInfo::SubpassDependencyDesc dependency;
+			
+			dependency.srcSubpass = static_cast<uint32_t>(infoobject["srcSubpass"].toInt());
+			dependency.dstSubpass = static_cast<uint32_t>(infoobject["dstSubpass"].toInt());
+			dependency.srcStageMask = EG::stringToVkPipelineStageFlags(infoobject["srcStageMask"].toString().toStdString());
+			dependency.dstStageMask = EG::stringToVkPipelineStageFlags(infoobject["dstStageMask"].toString().toStdString());
+			dependency.srcAccessMask = EG::stringToVkAccessFlags(infoobject["srcAccessMask"].toString().toStdString());
+			dependency.dstAccessMask = EG::stringToVkAccessFlags(infoobject["dstAccessMask"].toString().toStdString());
+			renderpassinfo.dependencies.push_back(dependency);
 		}
 		return renderpassinfo;
 	}

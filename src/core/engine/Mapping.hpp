@@ -2,7 +2,7 @@
 #include <vulkan/vulkan.hpp>
 #include <unordered_map>
 #include <string>
-
+#include <sstream>
 namespace EG {
 	static std::unordered_map<std::string, vk::Format> stringToFormatMap = {
 		{"eUndefined", vk::Format::eUndefined},
@@ -365,6 +365,31 @@ namespace EG {
 			throw std::runtime_error("Unknown pipeline stage flag bits string: " + stageString);
 		}
 	}
+	static vk::PipelineStageFlags stringToVkPipelineStageFlags(const std::string& stagesString) {
+		vk::PipelineStageFlags stagesFlags{};
+		if (stagesString.empty()) return stagesFlags;
+
+		std::istringstream ss(stagesString);
+		std::string stage;
+
+		while (std::getline(ss, stage, '|')) {
+			// trim
+			stage.erase(0, stage.find_first_not_of(" \t\n\r\f\v"));
+			stage.erase(stage.find_last_not_of(" \t\n\r\f\v") + 1);
+
+			if (stage.empty()) continue;
+
+			try {
+				stagesFlags |= stringToVkPipelineStageFlagBits(stage);
+			}
+			catch (...) {
+				throw std::runtime_error("Unknown PipelineStageFlagBits: " + stage);
+			}
+		}
+
+		return stagesFlags;
+	}
+
 	static std::unordered_map<std::string, vk::AccessFlagBits> stringToAccessFlagBitsMap = {
 		{"eIndirectCommandRead", vk::AccessFlagBits::eIndirectCommandRead},
 		{"eIndexRead", vk::AccessFlagBits::eIndexRead},
@@ -410,5 +435,24 @@ namespace EG {
 		} else {
 			throw std::runtime_error("Unknown access flag bits string: " + accessString);
 		}
+	}
+	static vk::AccessFlags stringToVkAccessFlags(const std::string& accessesString) {
+		vk::AccessFlags accessFlags{};
+		if (accessesString.empty()) return accessFlags;
+		std::istringstream ss(accessesString);
+		std::string access;
+		while (std::getline(ss, access, '|')) {
+			// trim
+			access.erase(0, access.find_first_not_of(" \t\n\r\f\v"));
+			access.erase(access.find_last_not_of(" \t\n\r\f\v") + 1);
+			if (access.empty()) continue;
+			try {
+				accessFlags |= stringToVkAccessFlagBits(access);
+			}
+			catch (...) {
+				throw std::runtime_error("Unknown AccessFlagBits: " + access);
+			}
+		}
+		return accessFlags;
 	}
 }

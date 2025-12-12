@@ -60,7 +60,6 @@ namespace RS {
 	};
 	class RenderPassLoader {
 	public:
-
 		static RenderPassInfo loadFromFile(const std::string& filepath);
 	};
 	class RenderPassManager{
@@ -68,6 +67,7 @@ namespace RS {
 		ResourceManager& resourcemanager;
 		std::unordered_map<RenderPassInfo, vk::RenderPass, RenderPassInfoHash> renderpasses;
 	public:
+		vk::RenderPass createRenderPass(const std::string& filepath);
 		vk::RenderPass createRenderPass(const RenderPassInfo& info);
 		vk::RenderPass getRenderPass(const RenderPassInfo& info);
 		RenderPassManager(ResourceManager& resourcemanager);

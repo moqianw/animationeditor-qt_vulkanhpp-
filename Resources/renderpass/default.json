@@ -7,17 +7,16 @@
       "finalLayout": "ePresentSrcKHR",
       "loadOp": "eClear",
       "storeOp": "eStore"
+    },
+    {
+      "format": "eD32Sfloat",
+      "samples": "e1",
+      "initialLayout": "eUndefined",
+      "finalLayout": "eDepthStencilAttachmentOptimal",
+      "loadOp": "eClear",
+      "storeOp": "eStore"
     }
   ],
-
-  "depthAttachment": {
-    "format": "eD32Sfloat",
-    "samples": "e1",
-    "initialLayout": "eUndefined",
-    "finalLayout": "eDepthStencilAttachmentOptimal",
-    "loadOp": "eClear",
-    "storeOp": "eStore"
-  },
 
   "subpasses": [
     {
@@ -25,7 +24,7 @@
       "colorRefs": [
         {
           "attachment": 0,
-          "layout": "eColorAttachmentOptimal"
+          "layout":  "eColorAttachmentOptimal"
         }
       ],
       "depthRef": {
